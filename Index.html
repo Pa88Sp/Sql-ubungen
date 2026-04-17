@@ -3,280 +3,227 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SQL Begleiter Lokal – Vollversion</title>
+  <title>SQL Praxiscoach</title>
   <style>
     :root {
-      --bg: #0b1020;
-      --panel: #121a2b;
-      --panel-2: #172033;
-      --panel-3: #0d1626;
-      --border: #2b3a55;
-      --text: #e8eefc;
-      --muted: #9fb0d1;
-      --accent: #67d4ff;
-      --accent-2: #7ef0a8;
-      --accent-3: #ffd166;
-      --danger: #ff7b7b;
-      --shadow: 0 10px 30px rgba(0,0,0,.24);
-      --radius: 18px;
+      --bg:#0b1020; --panel:#121a2b; --panel2:#172033; --panel3:#0d1626;
+      --border:#2b3a55; --text:#e8eefc; --muted:#9fb0d1;
+      --accent:#67d4ff; --ok:#7ef0a8; --warn:#ffd166; --danger:#ff7b7b;
     }
-    * { box-sizing: border-box; }
+    * { box-sizing:border-box; }
     body {
-      margin: 0;
-      font-family: Inter, Arial, Helvetica, sans-serif;
-      background: linear-gradient(180deg, #050814 0%, #0b1020 100%);
-      color: var(--text);
+      margin:0; font-family:Arial, Helvetica, sans-serif;
+      background:#050814; color:var(--text);
     }
-    .app { max-width: 1750px; margin: 0 auto; padding: 18px; }
-    .header {
-      background: rgba(18, 26, 43, 0.94);
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      padding: 22px;
-      box-shadow: var(--shadow);
-      margin-bottom: 18px;
+    .app { max-width:1500px; margin:0 auto; padding:10px; }
+    .topbar {
+      display:grid; grid-template-columns:260px 270px minmax(420px,1fr);
+      gap:10px; align-items:center; background:var(--panel);
+      border:1px solid var(--border); border-radius:16px; padding:10px 12px; margin-bottom:10px;
     }
-    .header h1 { margin: 0 0 8px; font-size: 32px; }
-    .header p { margin: 0; color: var(--muted); line-height: 1.55; max-width: 1200px; }
-    .layout { display: grid; grid-template-columns: 330px 1fr; gap: 18px; align-items: start; }
-    .sidebar, .workspace {
-      background: rgba(18, 26, 43, 0.94);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+    h1 { margin:0 0 4px; font-size:22px; letter-spacing:.5px; }
+    .subtitle { margin:0; color:var(--muted); font-size:13px; }
+    details.info { margin-top:6px; }
+    details.info summary {
+      cursor:pointer; display:inline-block; padding:5px 10px; border-radius:10px;
+      background:#24324d; font-weight:700; font-size:13px;
     }
-    .sidebar { padding: 16px; position: sticky; top: 18px; max-height: calc(100vh - 36px); overflow: auto; }
-    .workspace { padding: 16px; }
-    .section-title { margin: 6px 0 12px; font-size: 18px; }
-    .subtle { color: var(--muted); font-size: 14px; line-height: 1.5; }
-    .progress-box, .quick-box {
-      background: var(--panel-3);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
-      margin-bottom: 14px;
+    details.info p { margin:8px 0 0; color:var(--muted); font-size:13px; line-height:1.35; }
+    .box {
+      background:var(--panel3); border:1px solid var(--border); border-radius:12px; padding:8px 10px;
     }
-    .progress-meta {
-      display: flex; justify-content: space-between; gap: 8px;
-      font-size: 14px; color: var(--muted); margin-bottom: 8px;
+    .progress-meta { display:flex; justify-content:space-between; color:var(--muted); font-size:13px; margin-bottom:6px; }
+    .progressbar { height:7px; background:#08101d; border:1px solid var(--border); border-radius:99px; overflow:hidden; }
+    .progressfill { height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--ok)); }
+    .lesson-picker h2 { margin:0 0 5px; font-size:14px; }
+    .lesson-row { display:grid; grid-template-columns:1fr auto; gap:8px; }
+    select, textarea {
+      width:100%; border:1px solid var(--border); background:#08101d; color:var(--text);
+      border-radius:10px; padding:9px 10px; outline:none; font-weight:700;
     }
-    .progress-bar {
-      height: 10px; border-radius: 999px; border: 1px solid #24324d;
-      overflow: hidden; background: #09101d;
-    }
-    .progress-fill {
-      height: 100%; width: 0%;
-      background: linear-gradient(90deg, var(--accent), var(--accent-2));
-    }
-    .lesson-list { display: grid; gap: 10px; }
-    .lesson-btn {
-      width: 100%; text-align: left; padding: 13px; border-radius: 14px;
-      border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
-      cursor: pointer; transition: transform .15s ease, border-color .15s ease, background .15s ease;
-    }
-    .lesson-btn:hover { transform: translateY(-1px); border-color: var(--accent); }
-    .lesson-btn.active { border-color: var(--accent); background: #11263a; }
-    .lesson-btn.done { border-color: rgba(126,240,168,.55); }
-    .lesson-btn small { display: block; margin-top: 6px; color: var(--muted); line-height: 1.35; }
-    .top-stack { display: grid; gap: 16px; }
-    .hero-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; }
-    .mini-grid, .learn-grid, .results-grid, .stats-grid { display: grid; gap: 16px; }
-    .mini-grid, .learn-grid, .results-grid { grid-template-columns: 1fr 1fr; }
-    .stats-grid { grid-template-columns: repeat(4, 1fr); }
-    .card, .editor-wrap {
-      background: var(--panel-2); border: 1px solid var(--border);
-      border-radius: 16px; padding: 18px;
-    }
-    .card h2, .card h3, .editor-wrap h3 { margin-top: 0; }
-    .badge {
-      display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px;
-      background: #0f2d42; color: #b7ebff; margin-bottom: 10px;
-    }
-    .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-    .tag {
-      font-size: 12px; padding: 4px 8px; border-radius: 999px;
-      background: #21314f; color: #d7e1f7;
-    }
-    .step-box {
-      background: var(--panel-3); border: 1px solid var(--border);
-      border-radius: 14px; padding: 14px;
-    }
-    .step-box h3 { margin: 0 0 8px; font-size: 16px; }
-    .step-box p { margin: 0; color: var(--muted); line-height: 1.55; }
-    .hint-list, .check-list {
-      margin: 10px 0 0; padding-left: 18px; color: var(--muted); line-height: 1.6;
-    }
-    textarea, pre, code { font-family: Consolas, Monaco, monospace; }
-    textarea {
-      width: 100%; min-height: 260px; resize: vertical; border-radius: 16px;
-      border: 1px solid var(--border); background: #08101d; color: var(--text);
-      padding: 14px; font-size: 15px; line-height: 1.55; outline: none;
-    }
-    textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(103, 212, 255, .12); }
-    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 16px; }
     button {
-      border: none; border-radius: 12px; padding: 11px 15px; font-weight: 700;
-      cursor: pointer; transition: transform .15s ease, opacity .15s ease;
+      border:0; border-radius:10px; padding:9px 12px; font-weight:700; cursor:pointer;
+      background:#24324d; color:var(--text);
     }
-    button:hover { transform: translateY(-1px); }
-    .primary { background: var(--accent); color: #062235; }
-    .secondary { background: #d7e1f7; color: #12203a; }
-    .success { background: var(--accent-2); color: #07331a; }
-    .warning { background: var(--accent-3); color: #4c3100; }
-    .ghost { background: #24324d; color: var(--text); }
-    .status {
-      border-radius: 14px; padding: 12px 14px; border: 1px solid var(--border);
-      background: #101929; color: var(--muted); min-height: 50px; line-height: 1.5;
+    button:hover { filter:brightness(1.08); }
+    .primary { background:var(--accent); color:#062235; }
+    .warn { background:var(--warn); color:#4c3100; }
+    .okbtn { background:var(--ok); color:#07331a; }
+    .secondary { background:#d7e1f7; color:#12203a; }
+    .lesson-list {
+      display:none; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:8px; margin-bottom:10px;
     }
-    .status.ok { border-color: rgba(126,240,168,.5); color: #d3ffe2; background: rgba(40,94,59,.18); }
-    .status.err { border-color: rgba(255,123,123,.5); color: #ffe0e0; background: rgba(117,39,39,.16); }
-    .status.info { border-color: rgba(103,212,255,.4); color: #d9f4ff; background: rgba(20,57,86,.16); }
-    .stat-box {
-      background: var(--panel-3); border: 1px solid var(--border);
-      border-radius: 14px; padding: 14px;
+    .lesson-list.open { display:grid; }
+    .lesson-btn {
+      text-align:left; background:var(--panel2); border:1px solid var(--border);
+      padding:10px; border-radius:10px;
     }
-    .stat-box strong { display: block; font-size: 22px; margin-top: 6px; }
-    .table-section { display: grid; gap: 12px; }
-    .table-block {
-      border: 1px solid #24324d; border-radius: 14px; background: #09101d; overflow: hidden;
+    .lesson-btn.active { border-color:var(--accent); background:#11263a; }
+    .lesson-btn.done { border-color:rgba(126,240,168,.55); }
+    .lesson-btn small { display:block; color:var(--muted); margin-top:4px; line-height:1.25; }
+    .main { background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:10px; }
+    .lesson-overview { display:grid; grid-template-columns:1fr 320px; gap:8px; margin-bottom:8px; }
+    .card { background:var(--panel2); border:1px solid var(--border); border-radius:12px; padding:10px; }
+    .badge { display:inline-block; padding:3px 8px; border-radius:99px; background:#0f2d42; color:#b7ebff; font-size:11px; margin-bottom:7px; }
+    .lesson-title { margin:0 0 6px; font-size:22px; }
+    .muted { color:var(--muted); font-size:13px; line-height:1.35; }
+    .tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    .tag { background:#21314f; border-radius:99px; padding:3px 7px; font-size:11px; }
+    .tables-card { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .tables-card h3 { margin:0; }
+    .taskbox {
+      background:var(--panel3); border:1px solid rgba(103,212,255,.35);
+      border-radius:10px; padding:9px; margin-bottom:8px;
     }
-    .table-block-header {
-      padding: 10px 12px; background: #0d1626; color: #c7d5f2;
-      font-weight: 700; border-bottom: 1px solid #24324d;
+    .taskbox h3 { margin:0 0 5px; font-size:15px; }
+    .taskbox p { margin:0; font-size:14px; line-height:1.35; }
+    textarea { min-height:165px; resize:vertical; font-family:Consolas, Monaco, monospace; font-weight:400; line-height:1.45; }
+    .toolbar { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
+    .status { border:1px solid var(--border); border-radius:10px; padding:9px 11px; color:var(--muted); background:#101929; }
+    .status.ok { border-color:rgba(126,240,168,.5); color:#d3ffe2; background:rgba(40,94,59,.18); }
+    .status.err { border-color:rgba(255,123,123,.5); color:#ffe0e0; background:rgba(117,39,39,.16); }
+    .stats { display:grid; grid-template-columns:repeat(4,minmax(80px,1fr)); gap:6px; margin:8px 0; }
+    .stat { background:var(--panel3); border:1px solid var(--border); border-radius:9px; padding:6px 8px; }
+    .stat span { color:var(--muted); font-size:11px; }
+    .stat strong { display:block; font-size:15px; margin-top:2px; }
+    .results { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .results h3 { margin:0 0 8px; font-size:17px; }
+    .table-wrap { overflow:auto; border-radius:10px; border:1px solid var(--border); }
+    table { width:100%; border-collapse:collapse; background:#09101d; }
+    th, td { padding:7px 9px; border-bottom:1px solid #24324d; text-align:left; font-size:13px; white-space:nowrap; }
+    th { background:#101a2b; color:#c7d5f2; }
+    .modal {
+      display:none; position:fixed; inset:0; z-index:9999; padding:24px;
+      background:rgba(0,0,0,.72); align-items:center; justify-content:center;
     }
-    .data-table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td {
-      padding: 10px 12px; border-bottom: 1px solid #24324d; text-align: left; font-size: 14px;
+    .modal.open { display:flex; }
+    .modal-window {
+      width:min(1200px,96vw); max-height:90vh; display:flex; flex-direction:column;
+      background:var(--panel); border:1px solid var(--border); border-radius:18px; overflow:hidden;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
     }
-    th { background: #101a2b; color: #c7d5f2; }
-    td { color: #e6edfb; }
-    .footer-note { margin-top: 16px; color: var(--muted); font-size: 14px; line-height: 1.6; }
-    @media (max-width: 1200px) {
-      .layout, .hero-grid, .mini-grid, .learn-grid, .results-grid, .stats-grid { grid-template-columns: 1fr; }
-      .sidebar { position: static; max-height: none; }
+    .modal-head { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--panel3); border-bottom:1px solid var(--border); }
+    .modal-head h2 { margin:0; font-size:20px; }
+    .modal-body { overflow:auto; padding:14px; }
+    .modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; }
+    .table-block { border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:12px; background:#09101d; }
+    .table-block-title { background:#0d1626; padding:9px 10px; font-weight:700; border-bottom:1px solid var(--border); }
+    @media(max-width:1000px) {
+      .topbar, .lesson-overview, .results, .modal-grid { grid-template-columns:1fr; }
+    }
+    @media(max-width:560px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .modal { padding:10px; }
     }
   </style>
 </head>
 <body>
   <div class="app">
-    <section class="header">
-      <h1>SQL Begleiter – Vollversion</h1>
-      <p>
-        Ein lokaler SQL-Lerntrainer mit vielen Aufgaben zu SELECT, WHERE, ORDER BY, LIMIT, OFFSET, DISTINCT, LIKE mit % und _, IS NULL,
-        IS NOT NULL, GROUP BY, HAVING, INNER JOIN, LEFT JOIN, RIGHT JOIN, CROSS JOIN sowie CREATE TABLE, INSERT, UPDATE,
-        ALTER TABLE, RENAME TABLE und DROP TABLE. Alles läuft lokal im Browser in nur einer HTML-Datei.
-      </p>
+    <section class="topbar">
+      <div>
+        <h1>SQL Praxiscoach</h1>
+        <p class="subtitle">SQL üben, Query schreiben, Ergebnis prüfen.</p>
+        <details class="info">
+          <summary>Info</summary>
+          <p>Unterstützt Grundlagen, JOINs, Aliase, LIKE, NULL-Prüfungen, GROUP BY/HAVING und einfache DDL/DML-Befehle.</p>
+        </details>
+      </div>
+
+      <div class="box">
+        <div class="progress-meta">
+          <span id="progressText">0 / 60 erledigt</span>
+          <span id="scoreText">0 Punkte</span>
+        </div>
+        <div class="progressbar"><div id="progressFill" class="progressfill"></div></div>
+      </div>
+
+      <div class="lesson-picker">
+        <h2>Lektion auswählen</h2>
+        <div class="lesson-row">
+          <select id="lessonSelect"></select>
+          <button id="toggleLessonsBtn" type="button">Liste</button>
+        </div>
+      </div>
     </section>
 
-    <div class="layout">
-      <aside class="sidebar">
-        <div class="progress-box">
-          <div class="progress-meta">
-            <span id="progressText">0 / 56 erledigt</span>
-            <span id="scoreText">0 Punkte</span>
-          </div>
-          <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+    <div id="lessonList" class="lesson-list"></div>
+
+    <main class="main">
+      <section class="lesson-overview">
+        <div class="card">
+          <div id="lessonBadge" class="badge">Lektion</div>
+          <h2 id="lessonTitle" class="lesson-title">Willkommen</h2>
+          <p id="lessonDescription" class="muted">Wähle eine Lektion aus.</p>
+          <div id="tagRow" class="tags"></div>
         </div>
 
-        <div class="quick-box">
-          <strong>Lernfluss</strong>
-          <p class="subtle">Aufgabe lesen, Tabellen anschauen, Query selbst schreiben, prüfen, erst dann Hinweise oder Lösung öffnen.</p>
+        <div class="card tables-card">
+          <h3>Tabellen</h3>
+          <button id="openTablesBtn" type="button">anzeigen</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="taskbox">
+          <h3>Aktuelle Aufgabe</h3>
+          <p id="lessonTask"></p>
         </div>
 
-        <h2 class="section-title">Lektionen</h2>
-        <p class="subtle">Der Fortschritt wird lokal im Browser gespeichert.</p>
-        <div id="lessonList" class="lesson-list"></div>
-      </aside>
+        <h3>SQL Editor</h3>
+        <textarea id="sqlEditor" spellcheck="false" placeholder="Schreibe hier deine SQL-Abfrage selbst..."></textarea>
 
-      <main class="workspace">
-        <div class="top-stack">
-          <div class="hero-grid">
-            <section class="card">
-              <div id="lessonBadge" class="badge">Lektion</div>
-              <h2 id="lessonTitle">Willkommen</h2>
-              <p id="lessonDescription" class="subtle">Wähle links eine Lektion aus.</p>
-              <div id="tagRow" class="tag-row"></div>
-            </section>
-
-            <section class="card">
-              <h3>Was geprüft wird</h3>
-              <ul id="checkList" class="check-list"></ul>
-            </section>
-          </div>
-
-          <section class="mini-grid">
-            <div class="step-box">
-              <h3>1. Aufgabe</h3>
-              <p id="lessonTask"></p>
-            </div>
-            <div class="step-box">
-              <h3>2. Hinweise</h3>
-              <ul id="hintList" class="hint-list"></ul>
-            </div>
-          </section>
-
-          <section class="learn-grid">
-            <div class="card">
-              <h3>Tabellenschema</h3>
-              <div id="schemaView" class="table-section"></div>
-            </div>
-
-            <div class="card">
-              <h3>Beispieldaten</h3>
-              <div id="seedView" class="table-section"></div>
-            </div>
-          </section>
-
-          <section class="editor-wrap">
-            <h3>SQL Editor</h3>
-            <textarea id="sqlEditor" spellcheck="false" placeholder="Schreibe hier deine SQL-Abfrage selbst...
-
-Beispiele:
-SELECT DISTINCT stadt FROM mitarbeiter;
-SELECT * FROM mitarbeiter WHERE email IS NULL;
-SELECT * FROM mitarbeiter WHERE name LIKE 'A%';
-SELECT * FROM mitarbeiter WHERE name LIKE '_e%';
-SELECT * FROM mitarbeiter LIMIT 2 OFFSET 1;
-CREATE TABLE kunden (id INT, name VARCHAR(100));"></textarea>
-            <div class="toolbar">
-              <button id="runBtn" class="primary">Prüfen</button>
-              <button id="hintBtn" class="warning">Hinweis</button>
-              <button id="expectedBtn" class="secondary">Erwartetes Ergebnis</button>
-              <button id="solutionBtn" class="ghost">Lösung anzeigen</button>
-              <button id="clearBtn" class="ghost">Editor leeren</button>
-              <button id="prevBtn" class="ghost">Zurück</button>
-              <button id="nextBtn" class="success">Weiter</button>
-              <button id="resetBtn" class="ghost">Fortschritt löschen</button>
-            </div>
-            <div id="status" class="status info">Bereit. Das Eingabefeld ist leer, damit du die SQL-Abfrage selbst schreibst.</div>
-          </section>
-
-          <section class="stats-grid">
-            <div class="stat-box"><span class="subtle">Aktuelle Lektion</span><strong id="currentLessonStat">1</strong></div>
-            <div class="stat-box"><span class="subtle">Gelöste Aufgaben</span><strong id="solvedStat">0</strong></div>
-            <div class="stat-box"><span class="subtle">Versuche</span><strong id="attemptStat">0</strong></div>
-            <div class="stat-box"><span class="subtle">Genutzte Hinweise</span><strong id="hintStat">0</strong></div>
-          </section>
-
-          <section class="results-grid">
-            <div class="card">
-              <h3>Dein Ergebnis</h3>
-              <div id="userResult"><p class="subtle">Noch keine Ausgabe.</p></div>
-            </div>
-            <div class="card">
-              <h3>Erwartetes Ergebnis</h3>
-              <div id="expectedResult"><p class="subtle">Wird beim Prüfen oder per Button angezeigt.</p></div>
-            </div>
-          </section>
+        <div class="toolbar">
+          <button id="runBtn" class="primary">Prüfen</button>
+          <button id="hintBtn" class="warn">Hinweis</button>
+          <button id="expectedBtn" class="secondary">Erwartetes Ergebnis</button>
+          <button id="solutionBtn">Lösung anzeigen</button>
+          <button id="clearBtn">Editor leeren</button>
+          <button id="prevBtn">Zurück</button>
+          <button id="nextBtn" class="okbtn">Weiter</button>
+          <button id="resetBtn">Fortschritt löschen</button>
         </div>
 
-        <p class="footer-note">
-          Diese Version unterstützt Grundlagen, DDL/DML und JOIN-Formen für das lokale Lernen:
-          SELECT, WHERE, ORDER BY, LIMIT, OFFSET, DISTINCT, LIKE mit % und _, IS NULL, IS NOT NULL, GROUP BY mit COUNT(*), HAVING,
-          CREATE TABLE, INSERT INTO, UPDATE, ALTER TABLE, RENAME TABLE, DROP TABLE sowie INNER JOIN, LEFT JOIN, RIGHT JOIN und CROSS JOIN.
-        </p>
-      </main>
+        <div id="status" class="status">Bereit. Schreibe deine SQL-Abfrage selbst.</div>
+      </section>
+
+      <section class="stats">
+        <div class="stat"><span>Lektion</span><strong id="currentLessonStat">1</strong></div>
+        <div class="stat"><span>Gelöst</span><strong id="solvedStat">0</strong></div>
+        <div class="stat"><span>Versuche</span><strong id="attemptStat">0</strong></div>
+        <div class="stat"><span>Hinweise</span><strong id="hintStat">0</strong></div>
+      </section>
+
+      <section class="results">
+        <div class="card">
+          <h3>Dein Ergebnis</h3>
+          <div id="userResult"><p class="muted">Noch keine Ausgabe.</p></div>
+        </div>
+        <div class="card">
+          <h3>Erwartetes Ergebnis</h3>
+          <div id="expectedResult"><p class="muted">Wird beim Prüfen oder per Button angezeigt.</p></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="tablesModal" class="modal" aria-hidden="true">
+    <div class="modal-window">
+      <div class="modal-head">
+        <h2>Tabellenübersicht</h2>
+        <button id="closeTablesBtn" type="button">Schließen</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-grid">
+          <section>
+            <h3>Tabellenschema</h3>
+            <div id="schemaView"></div>
+          </section>
+          <section>
+            <h3>Beispieldaten</h3>
+            <div id="seedView"></div>
+          </section>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -388,26 +335,28 @@ CREATE TABLE kunden (id INT, name VARCHAR(100));"></textarea>
       { level: 'Schwer', title: '54. LIKE mit festem Anfang und Ende', description: 'Kombiniere % und _ in einem Muster.', task: "Zeige alle Mitarbeiter, deren name mit 'D' beginnt und auf 'd' endet.", solution: "SELECT * FROM mitarbeiter WHERE name LIKE 'D%d';", hints: ["D am Anfang", '% für die Mitte', "d am Ende"], checks: ['Nur David'], tags: ['LIKE', '%'] },
       { level: 'Schwer', title: '55. LIKE auf E-Mail-Domain', description: 'Filtere mit LIKE nach einem typischen Textmuster.', task: "Zeige alle Mitarbeiter, deren email auf '@firma.de' endet.", solution: "SELECT * FROM mitarbeiter WHERE email LIKE '%@firma.de';", hints: ['% für den vorderen Teil', "Dann @firma.de"], checks: ['Anna, Clara, Eva'], tags: ['LIKE', '%'] },
       { level: 'Schwer', title: '56. LIKE mit genau fünf Zeichen und A am Anfang', description: 'Nutze _ mehrfach zusammen mit einem festen Start.', task: "Zeige alle Mitarbeiter, deren name mit 'A' beginnt und genau 4 weitere Zeichen hat.", solution: "SELECT * FROM mitarbeiter WHERE name LIKE 'A____';", hints: ["A am Anfang", 'Vier Unterstriche danach'], checks: ['Nur Anna'], tags: ['LIKE', '_'] }
-
+,
+      { level: 'Schwer', title: '57. Tabellenalias im INNER JOIN', description: 'Aliase machen JOIN-Abfragen kürzer und lesbarer.', task: 'Nutze Aliase: Zeige m.name und a.name aus mitarbeiter m und abteilungen a.', solution: 'SELECT m.name, a.name FROM mitarbeiter m INNER JOIN abteilungen a ON m.abteilung_id = a.id;', hints: ['mitarbeiter m', 'abteilungen a', 'ON m.abteilung_id = a.id'], checks: ['Mitarbeitername plus Abteilungsname'], tags: ['Alias', 'INNER JOIN'] },
+      { level: 'Schwer', title: '58. Alias mit AS', description: 'Du kannst Aliase auch ausdrücklich mit AS schreiben.', task: 'Nutze AS-Aliase: Zeige m.name und a.standort aus mitarbeiter AS m und abteilungen AS a.', solution: 'SELECT m.name, a.standort FROM mitarbeiter AS m INNER JOIN abteilungen AS a ON m.abteilung_id = a.id;', hints: ['mitarbeiter AS m', 'abteilungen AS a'], checks: ['Mitarbeiter plus Standort'], tags: ['Alias', 'AS'] },
+      { level: 'Schwer', title: '59. Spaltenalias mit AS', description: 'Spalten können im Ergebnis andere Namen bekommen.', task: 'Zeige m.name AS mitarbeiter und a.name AS abteilung mit Tabellenaliasen.', solution: 'SELECT m.name AS mitarbeiter, a.name AS abteilung FROM mitarbeiter m INNER JOIN abteilungen a ON m.abteilung_id = a.id;', hints: ['Spaltenalias mit AS', 'Tabellenalias m und a'], checks: ['Spalten heißen mitarbeiter und abteilung'], tags: ['Spaltenalias', 'AS'] },
+      { level: 'Schwer', title: '60. Alias mit WHERE', description: 'Aliase funktionieren auch in WHERE-Bedingungen.', task: 'Zeige m.name und a.name nur für IT, nutze die Aliase m und a.', solution: "SELECT m.name, a.name FROM mitarbeiter m INNER JOIN abteilungen a ON m.abteilung_id = a.id WHERE a.name = 'IT';", hints: ['WHERE a.name = IT', 'Aliase in ON und WHERE nutzen'], checks: ['Nur Anna und Clara'], tags: ['Alias', 'WHERE'] }
     ];
 
-    const progressKey = 'sql_begleiter_voll_progress_v1';
+    const progressKey = 'sql_praxiscoach_stabil_v1';
     let state = loadState();
     let currentLessonIndex = state.currentLessonIndex || 0;
     let currentHintIndex = 0;
 
+    const lessonSelect = document.getElementById('lessonSelect');
     const lessonList = document.getElementById('lessonList');
+    const toggleLessonsBtn = document.getElementById('toggleLessonsBtn');
     const lessonBadge = document.getElementById('lessonBadge');
     const lessonTitle = document.getElementById('lessonTitle');
     const lessonDescription = document.getElementById('lessonDescription');
     const lessonTask = document.getElementById('lessonTask');
-    const hintList = document.getElementById('hintList');
-    const checkList = document.getElementById('checkList');
     const tagRow = document.getElementById('tagRow');
-    const schemaView = document.getElementById('schemaView');
-    const seedView = document.getElementById('seedView');
     const sqlEditor = document.getElementById('sqlEditor');
-    const status = document.getElementById('status');
+    const statusBox = document.getElementById('status');
     const userResult = document.getElementById('userResult');
     const expectedResult = document.getElementById('expectedResult');
     const progressText = document.getElementById('progressText');
@@ -421,8 +370,7 @@ CREATE TABLE kunden (id INT, name VARCHAR(100));"></textarea>
     function loadState() {
       try {
         const raw = localStorage.getItem(progressKey);
-        if (!raw) return { solved: {}, attempts: 0, hintsUsed: 0, score: 0, currentLessonIndex: 0 };
-        return JSON.parse(raw);
+        return raw ? JSON.parse(raw) : { solved: {}, attempts: 0, hintsUsed: 0, score: 0, currentLessonIndex: 0 };
       } catch {
         return { solved: {}, attempts: 0, hintsUsed: 0, score: 0, currentLessonIndex: 0 };
       }
@@ -435,36 +383,27 @@ CREATE TABLE kunden (id INT, name VARCHAR(100));"></textarea>
 
     function escapeHtml(text) {
       return String(text)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
+        .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
+        .replaceAll('"','&quot;').replaceAll("'",'&#039;');
     }
 
-    function setStatus(message, type = 'info') {
-      status.className = 'status';
-      status.classList.add(type);
-      status.innerHTML = message;
+    function setStatus(message, type = '') {
+      statusBox.className = 'status' + (type ? ' ' + type : '');
+      statusBox.innerHTML = message;
     }
 
     function normalizeValue(raw) {
-      const value = raw.trim();
-      if ((value.startsWith("'") && value.endsWith("'")) || (value.startsWith('"') && value.endsWith('"'))) {
-        return value.slice(1, -1);
-      }
-      if (!Number.isNaN(Number(value))) return Number(value);
-      return value;
+      const v = raw.trim();
+      if ((v.startsWith("'") && v.endsWith("'")) || (v.startsWith('"') && v.endsWith('"'))) return v.slice(1,-1);
+      if (!Number.isNaN(Number(v))) return Number(v);
+      return v;
     }
 
     function splitClauses(sql) {
       const cleaned = sql.trim().replace(/;$/, '').replace(/\s+/g, ' ');
       const lower = cleaned.toLowerCase();
-      const selectIdx = lower.indexOf('select ');
       const fromIdx = lower.indexOf(' from ');
-      if (selectIdx !== 0 || fromIdx === -1) {
-        throw new Error('Unterstützt wird aktuell SELECT ... FROM ...');
-      }
+      if (!lower.startsWith('select ') || fromIdx === -1) throw new Error('Unterstützt wird aktuell SELECT ... FROM ...');
 
       const positions = {
         where: lower.indexOf(' where '),
@@ -474,41 +413,47 @@ CREATE TABLE kunden (id INT, name VARCHAR(100));"></textarea>
         limit: lower.indexOf(' limit '),
         offset: lower.indexOf(' offset ')
       };
-
-      const clauseStarts = Object.values(positions).filter(v => v !== -1).sort((a, b) => a - b);
-
-      function getClause(startIndex, keywordLen) {
-        if (startIndex === -1) return null;
-        const next = clauseStarts.find(v => v > startIndex) || cleaned.length;
-        return cleaned.slice(startIndex + keywordLen, next).trim();
-      }
-
-      const fromEnd = clauseStarts[0] || cleaned.length;
+      const starts = Object.values(positions).filter(v => v !== -1).sort((a,b)=>a-b);
+      const get = (pos, len) => {
+        if (pos === -1) return null;
+        const next = starts.find(v => v > pos) || cleaned.length;
+        return cleaned.slice(pos + len, next).trim();
+      };
       return {
         select: cleaned.slice(7, fromIdx).trim(),
-        from: cleaned.slice(fromIdx + 6, fromEnd).trim(),
-        where: getClause(positions.where, 7),
-        groupBy: getClause(positions.groupBy, 10),
-        having: getClause(positions.having, 8),
-        orderBy: getClause(positions.orderBy, 10),
-        limit: getClause(positions.limit, 7),
-        offset: getClause(positions.offset, 8)
+        from: cleaned.slice(fromIdx + 6, starts[0] || cleaned.length).trim(),
+        where: get(positions.where, 7),
+        groupBy: get(positions.groupBy, 10),
+        having: get(positions.having, 8),
+        orderBy: get(positions.orderBy, 10),
+        limit: get(positions.limit, 7),
+        offset: get(positions.offset, 8)
       };
     }
 
-    function getQualifiedRow(tableName, row) {
+    function parseTableRef(ref) {
+      const p = ref.trim().split(/\s+/);
+      if (p.length === 1) return { table: p[0], alias: null };
+      if (p.length === 2) return { table: p[0], alias: p[1] };
+      if (p.length === 3 && p[1].toLowerCase() === 'as') return { table: p[0], alias: p[2] };
+      throw new Error('Tabellenalias konnte nicht gelesen werden: ' + ref);
+    }
+
+    function getQualifiedRow(table, row, alias=null) {
       const out = {};
-      Object.keys(row).forEach(key => {
-        out[tableName + '.' + key] = row[key];
-        if (!(key in out)) out[key] = row[key];
+      Object.keys(row).forEach(k => {
+        out[table + '.' + k] = row[k];
+        if (alias) out[alias + '.' + k] = row[k];
+        if (!(k in out)) out[k] = row[k];
       });
       return out;
     }
 
-    function nullQualifiedRow(tableName) {
+    function nullQualifiedRow(table, alias=null) {
       const out = {};
-      (schemas[tableName] || []).forEach(col => {
-        out[tableName + '.' + col.spalte] = null;
+      schemas[table].forEach(col => {
+        out[table + '.' + col.spalte] = null;
+        if (alias) out[alias + '.' + col.spalte] = null;
         if (!(col.spalte in out)) out[col.spalte] = null;
       });
       return out;
@@ -516,403 +461,310 @@ CREATE TABLE kunden (id INT, name VARCHAR(100));"></textarea>
 
     function parseFromAndJoins(fromClause) {
       const joinRegex = /\s+(inner join|left join|right join|cross join|join)\s+/i;
-      const firstJoinMatch = fromClause.match(joinRegex);
-      const baseTable = firstJoinMatch ? fromClause.slice(0, firstJoinMatch.index).trim() : fromClause.trim();
-      let rest = firstJoinMatch ? fromClause.slice(firstJoinMatch.index).trim() : '';
-
-      if (!data[baseTable]) throw new Error('Unbekannte Tabelle: ' + baseTable);
-
+      const first = fromClause.match(joinRegex);
+      const baseRef = first ? fromClause.slice(0, first.index).trim() : fromClause.trim();
+      const base = parseTableRef(baseRef);
+      if (!data[base.table]) throw new Error('Unbekannte Tabelle: ' + base.table);
+      let rest = first ? fromClause.slice(first.index).trim() : '';
       const joins = [];
+
       while (rest) {
-        const typeMatch = rest.match(/^(inner join|left join|right join|cross join|join)\s+/i);
-        if (!typeMatch) throw new Error('JOIN-Teil konnte nicht gelesen werden.');
-        let joinType = typeMatch[1].toUpperCase();
-        if (joinType === 'JOIN') joinType = 'INNER JOIN';
-        rest = rest.slice(typeMatch[0].length);
+        const tm = rest.match(/^(inner join|left join|right join|cross join|join)\s+/i);
+        if (!tm) throw new Error('JOIN-Teil konnte nicht gelesen werden.');
+        let type = tm[1].toUpperCase();
+        if (type === 'JOIN') type = 'INNER JOIN';
+        rest = rest.slice(tm[0].length);
+        const next = rest.search(/\s+(inner join|left join|right join|cross join|join)\s+/i);
+        const chunk = next === -1 ? rest : rest.slice(0, next);
+        rest = next === -1 ? '' : rest.slice(next).trim();
 
-        const nextJoin = rest.search(/\s+(inner join|left join|right join|cross join|join)\s+/i);
-        const chunk = nextJoin === -1 ? rest : rest.slice(0, nextJoin);
-        rest = nextJoin === -1 ? '' : rest.slice(nextJoin).trim();
-
-        let tableName = '';
-        let on = null;
-
-        if (joinType === 'CROSS JOIN') {
-          tableName = chunk.trim();
+        let tableRef, on = null;
+        if (type === 'CROSS JOIN') {
+          tableRef = chunk.trim();
         } else {
-          const onMatch = chunk.match(/\s+on\s+/i);
-          if (!onMatch) throw new Error(joinType + ' braucht eine ON-Bedingung.');
-          tableName = chunk.slice(0, onMatch.index).trim();
-          on = chunk.slice(onMatch.index + onMatch[0].length).trim();
+          const om = chunk.match(/\s+on\s+/i);
+          if (!om) throw new Error(type + ' braucht eine ON-Bedingung.');
+          tableRef = chunk.slice(0, om.index).trim();
+          on = chunk.slice(om.index + om[0].length).trim();
         }
-
-        if (!data[tableName]) throw new Error('Unbekannte Tabelle: ' + tableName);
-        joins.push({ type: joinType, table: tableName, on });
+        const tr = parseTableRef(tableRef);
+        if (!data[tr.table]) throw new Error('Unbekannte Tabelle: ' + tr.table);
+        joins.push({ type, table: tr.table, alias: tr.alias, on });
       }
-
-      return { baseTable, joins };
+      return { baseTable: base.table, baseAlias: base.alias, joins };
     }
 
     function likeToRegex(pattern) {
-      const escaped = pattern
-        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        .replace(/%/g, '.*')
-        .replace(/_/g, '.');
+      const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g,'.*').replace(/_/g,'.');
       return new RegExp('^' + escaped + '$', 'i');
     }
 
     function evalExpr(row, expr) {
-      const clean = expr.trim();
-      if ((clean.startsWith("'") && clean.endsWith("'")) || (clean.startsWith('"') && clean.endsWith('"'))) {
-        return clean.slice(1, -1);
-      }
-      if (!Number.isNaN(Number(clean))) return Number(clean);
-      if (clean in row) return row[clean];
-      return row[clean.toLowerCase()] ?? row[clean];
+      const c = expr.trim();
+      if ((c.startsWith("'") && c.endsWith("'")) || (c.startsWith('"') && c.endsWith('"'))) return c.slice(1,-1);
+      if (!Number.isNaN(Number(c))) return Number(c);
+      return row[c];
     }
 
     function evalCondition(row, cond) {
-      const likeMatch = cond.match(/^([\w.]+)\s+like\s+(.+)$/i);
-      if (likeMatch) {
-        const left = evalExpr(row, likeMatch[1]);
-        const pattern = normalizeValue(likeMatch[2]);
-        return likeToRegex(String(pattern)).test(String(left ?? ''));
+      const like = cond.match(/^([\w.]+)\s+like\s+(.+)$/i);
+      if (like) return likeToRegex(String(normalizeValue(like[2]))).test(String(evalExpr(row, like[1]) ?? ''));
+      const nul = cond.match(/^([\w.]+)\s+is\s+(not\s+)?null$/i);
+      if (nul) {
+        const v = evalExpr(row, nul[1]);
+        return nul[2] ? v !== null && v !== undefined : v === null || v === undefined;
       }
-
-      const nullMatch = cond.match(/^([\w.]+)\s+is\s+(not\s+)?null$/i);
-      if (nullMatch) {
-        const value = evalExpr(row, nullMatch[1]);
-        return nullMatch[2] ? value !== null && value !== undefined : value === null || value === undefined;
-      }
-
-      const match = cond.match(/^([\w.]+)\s*(=|>|<)\s*(.+)$/i);
-      if (!match) throw new Error('Bedingung konnte nicht gelesen werden: ' + cond);
-      const left = evalExpr(row, match[1]);
-      const right = evalExpr(row, match[3]);
-      const op = match[2];
-      if (op === '=') return left === right;
-      if (op === '>') return left > right;
-      if (op === '<') return left < right;
+      const m = cond.match(/^([\w.]+)\s*(=|>|<)\s*(.+)$/i);
+      if (!m) throw new Error('Bedingung konnte nicht gelesen werden: ' + cond);
+      const l = evalExpr(row, m[1]);
+      const r = evalExpr(row, m[3]);
+      if (m[2] === '=') return l === r;
+      if (m[2] === '>') return l > r;
+      if (m[2] === '<') return l < r;
       return false;
     }
 
     function evalWhere(row, whereClause) {
-      const parts = whereClause.split(/\s+and\s+/i).map(s => s.trim()).filter(Boolean);
-      return parts.every(part => evalCondition(row, part));
+      return whereClause.split(/\s+and\s+/i).every(part => evalCondition(row, part.trim()));
     }
 
-    function applyJoin(currentRows, joinSpec) {
-      const rightRows = data[joinSpec.table].map(r => getQualifiedRow(joinSpec.table, r));
-
-      if (joinSpec.type === 'CROSS JOIN') {
+    function applyJoin(rows, join) {
+      const right = data[join.table].map(r => getQualifiedRow(join.table, r, join.alias));
+      if (join.type === 'CROSS JOIN') {
         const out = [];
-        currentRows.forEach(leftRow => {
-          rightRows.forEach(rightRow => out.push({ ...leftRow, ...rightRow }));
-        });
+        rows.forEach(l => right.forEach(r => out.push({...l, ...r})));
         return out;
       }
-
-      if (joinSpec.type === 'RIGHT JOIN') {
+      if (join.type === 'RIGHT JOIN') {
         const out = [];
-        rightRows.forEach(rightRow => {
+        right.forEach(r => {
           let matched = false;
-          currentRows.forEach(leftRow => {
-            const merged = { ...leftRow, ...rightRow };
-            if (evalCondition(merged, joinSpec.on)) {
-              out.push(merged);
-              matched = true;
-            }
+          rows.forEach(l => {
+            const merged = {...l, ...r};
+            if (evalCondition(merged, join.on)) { out.push(merged); matched = true; }
           });
           if (!matched) {
             const nulls = {};
-            if (currentRows[0]) {
-              Object.keys(currentRows[0]).forEach(k => { nulls[k] = null; });
-            }
-            out.push({ ...nulls, ...rightRow });
+            if (rows[0]) Object.keys(rows[0]).forEach(k => nulls[k] = null);
+            out.push({...nulls, ...r});
           }
         });
         return out;
       }
-
       const out = [];
-      currentRows.forEach(leftRow => {
+      rows.forEach(l => {
         let matched = false;
-        rightRows.forEach(rightRow => {
-          const merged = { ...leftRow, ...rightRow };
-          if (evalCondition(merged, joinSpec.on)) {
-            out.push(merged);
-            matched = true;
-          }
+        right.forEach(r => {
+          const merged = {...l, ...r};
+          if (evalCondition(merged, join.on)) { out.push(merged); matched = true; }
         });
-        if (!matched && joinSpec.type === 'LEFT JOIN') {
-          out.push({ ...leftRow, ...nullQualifiedRow(joinSpec.table) });
-        }
+        if (!matched && join.type === 'LEFT JOIN') out.push({...l, ...nullQualifiedRow(join.table, join.alias)});
       });
       return out;
     }
 
     function distinctRows(rows) {
       const seen = new Set();
-      return rows.filter(row => {
-        const key = JSON.stringify(row);
+      return rows.filter(r => {
+        const key = JSON.stringify(r);
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
       });
     }
 
-    function normalizeSelect(selectClause) {
-      const trimmed = selectClause.trim();
-      if (/^distinct\s+/i.test(trimmed)) {
-        return { distinct: true, select: trimmed.replace(/^distinct\s+/i, '').trim() };
+    function normalizeSelect(s) {
+      const t = s.trim();
+      if (/^distinct\s+/i.test(t)) return { distinct:true, select:t.replace(/^distinct\s+/i,'').trim() };
+      return { distinct:false, select:t };
+    }
+
+    function projectRows(rows, select, distinct) {
+      if (select.trim() === '*') {
+        const cleaned = rows.map(row => {
+          const obj = {};
+          Object.keys(row).forEach(k => { if (!k.includes('.')) obj[k] = row[k]; });
+          return obj;
+        });
+        return distinct ? distinctRows(cleaned) : cleaned;
       }
-      return { distinct: false, select: trimmed };
-    }
-
-    function parseHaving(havingClause) {
-      const match = havingClause.match(/^count\(\*\)\s*(=|>|<)\s*(\d+)$/i);
-      if (!match) throw new Error('HAVING wird aktuell nur mit COUNT(*) unterstützt.');
-      return { op: match[1], value: Number(match[2]) };
-    }
-
-    function compareSimple(a, b, op) {
-      if (op === '=') return a === b;
-      if (op === '>') return a > b;
-      if (op === '<') return a < b;
-      return false;
-    }
-
-    function projectColumns(rows, selectClause, distinctMode) {
-      if (selectClause.trim() === '*') {
-        return distinctMode ? distinctRows(rows) : rows;
-      }
-      const columns = selectClause.split(',').map(c => c.trim());
-      let out = rows.map(row => {
+      const cols = select.split(',').map(c => c.trim());
+      const out = rows.map(row => {
         const obj = {};
-        columns.forEach(col => {
-          obj[col] = evalExpr(row, col);
+        cols.forEach(col => {
+          const am = col.match(/^(.+?)\s+as\s+([\w_]+)$/i);
+          if (am) obj[am[2].trim()] = evalExpr(row, am[1].trim());
+          else obj[col] = evalExpr(row, col);
         });
         return obj;
       });
-      return distinctMode ? distinctRows(out) : out;
+      return distinct ? distinctRows(out) : out;
     }
 
     function simulateStatement(sql) {
-      const cleaned = sql.trim().replace(/;$/, '');
-      const lower = cleaned.toLowerCase();
-
+      const c = sql.trim().replace(/;$/,'');
+      const lower = c.toLowerCase();
       if (lower.startsWith('create table ')) {
-        const tableMatch = cleaned.match(/^create table\s+(\w+)\s*\(([\s\S]+)\)$/i);
-        if (!tableMatch) throw new Error('CREATE TABLE konnte nicht gelesen werden.');
-        const tableName = tableMatch[1];
-        const cols = tableMatch[2].split(',').map(s => s.trim());
-        return cols.map(def => {
-          const parts = def.split(/\s+/);
-          return { aktion: 'CREATE TABLE', tabelle: tableName, spalte: parts[0] || '', definition: def };
+        const m = c.match(/^create table\s+(\w+)\s*\(([\s\S]+)\)$/i);
+        if (!m) throw new Error('CREATE TABLE konnte nicht gelesen werden.');
+        return m[2].split(',').map(def => {
+          const d = def.trim();
+          return { aktion:'CREATE TABLE', tabelle:m[1], spalte:d.split(/\s+/)[0], definition:d };
         });
       }
-
       if (lower.startsWith('insert into ')) {
-        const insMatch = cleaned.match(/^insert into\s+(\w+)\s*\((.+)\)\s*values\s*\((.+)\)$/i);
-        if (!insMatch) throw new Error('INSERT INTO konnte nicht gelesen werden.');
-        const cols = insMatch[2].split(',').map(s => s.trim());
-        const vals = insMatch[3].split(',').map(s => normalizeValue(s.trim()));
+        const m = c.match(/^insert into\s+(\w+)\s*\((.+)\)\s*values\s*\((.+)\)$/i);
+        if (!m) throw new Error('INSERT INTO konnte nicht gelesen werden.');
+        const cols = m[2].split(',').map(s=>s.trim());
+        const vals = m[3].split(',').map(s=>normalizeValue(s.trim()));
         const row = {};
-        cols.forEach((c, i) => row[c] = vals[i]);
+        cols.forEach((col,i)=>row[col]=vals[i]);
         return [row];
       }
-
       if (lower.startsWith('update ')) {
-        const updMatch = cleaned.match(/^update\s+(\w+)\s+set\s+([\w.]+)\s*=\s*(.+?)(?:\s+where\s+(.+))?$/i);
-        if (!updMatch) throw new Error('UPDATE konnte nicht gelesen werden.');
-        const tableName = updMatch[1];
-        const col = updMatch[2];
-        const valueRaw = updMatch[3].trim();
-        const where = updMatch[4];
-        const rows = data[tableName].map(r => ({ ...r }));
-        const matched = rows.filter(r => !where || evalWhere(r, where));
-        return matched.map(r => {
-          const after = { ...r };
-          after[col] = normalizeValue(valueRaw);
-          return after;
-        });
+        const m = c.match(/^update\s+(\w+)\s+set\s+([\w.]+)\s*=\s*(.+?)(?:\s+where\s+(.+))?$/i);
+        if (!m) throw new Error('UPDATE konnte nicht gelesen werden.');
+        return data[m[1]].filter(r => !m[4] || evalWhere(r,m[4])).map(r => { const x={...r}; x[m[2]]=normalizeValue(m[3]); return x; });
       }
-
       if (lower.startsWith('alter table ')) {
-        if (/ rename to /i.test(cleaned)) {
-          const m = cleaned.match(/^alter table\s+(\w+)\s+rename to\s+(\w+)$/i);
-          if (!m) throw new Error('ALTER TABLE ... RENAME TO konnte nicht gelesen werden.');
-          return [{ aktion: 'ALTER TABLE RENAME', alt: m[1], neu: m[2] }];
-        }
-        if (/ add /i.test(cleaned)) {
-          const m = cleaned.match(/^alter table\s+(\w+)\s+add\s+(.+)$/i);
-          if (!m) throw new Error('ALTER TABLE ... ADD konnte nicht gelesen werden.');
-          return [{ aktion: 'ALTER TABLE ADD', tabelle: m[1], definition: m[2] }];
-        }
+        const rn = c.match(/^alter table\s+(\w+)\s+rename to\s+(\w+)$/i);
+        if (rn) return [{ aktion:'ALTER TABLE RENAME', alt:rn[1], neu:rn[2] }];
+        const add = c.match(/^alter table\s+(\w+)\s+add\s+(.+)$/i);
+        if (add) return [{ aktion:'ALTER TABLE ADD', tabelle:add[1], definition:add[2] }];
         throw new Error('ALTER TABLE wird aktuell mit ADD oder RENAME TO unterstützt.');
       }
-
       if (lower.startsWith('rename table ')) {
-        const m = cleaned.match(/^rename table\s+(\w+)\s+to\s+(\w+)$/i);
+        const m = c.match(/^rename table\s+(\w+)\s+to\s+(\w+)$/i);
         if (!m) throw new Error('RENAME TABLE konnte nicht gelesen werden.');
-        return [{ aktion: 'RENAME TABLE', alt: m[1], neu: m[2] }];
+        return [{ aktion:'RENAME TABLE', alt:m[1], neu:m[2] }];
       }
-
       if (lower.startsWith('drop table ')) {
-        const m = cleaned.match(/^drop table\s+(\w+)$/i);
+        const m = c.match(/^drop table\s+(\w+)$/i);
         if (!m) throw new Error('DROP TABLE konnte nicht gelesen werden.');
-        return [{ aktion: 'DROP TABLE', tabelle: m[1] }];
+        return [{ aktion:'DROP TABLE', tabelle:m[1] }];
       }
-
       throw new Error('Diese Anweisung wird aktuell nicht unterstützt.');
     }
 
     function executeQuery(sql) {
-      const trimmed = sql.trim();
-      if (!trimmed.toLowerCase().startsWith('select ')) {
-        return simulateStatement(trimmed);
-      }
+      if (!sql.trim().toLowerCase().startsWith('select ')) return simulateStatement(sql);
+      const p = splitClauses(sql);
+      const plan = parseFromAndJoins(p.from);
+      let rows = data[plan.baseTable].map(r => getQualifiedRow(plan.baseTable, r, plan.baseAlias));
+      plan.joins.forEach(j => rows = applyJoin(rows, j));
+      if (p.where) rows = rows.filter(r => evalWhere(r, p.where));
 
-      const parsed = splitClauses(trimmed);
-      const plan = parseFromAndJoins(parsed.from);
-
-      let rows = data[plan.baseTable].map(r => getQualifiedRow(plan.baseTable, r));
-      plan.joins.forEach(joinSpec => {
-        rows = applyJoin(rows, joinSpec);
-      });
-
-      if (parsed.where) {
-        rows = rows.filter(row => evalWhere(row, parsed.where));
-      }
-
-      const sel = normalizeSelect(parsed.select);
-
-      if (parsed.groupBy) {
-        const groupColumn = parsed.groupBy.trim();
-        const normSelect = sel.select.toLowerCase().replace(/\s+/g, '');
-        const a = groupColumn.toLowerCase() + ',count(*)';
-        const b = 'count(*),' + groupColumn.toLowerCase();
-        if (normSelect !== a && normSelect !== b) {
+      const sel = normalizeSelect(p.select);
+      if (p.groupBy) {
+        const g = p.groupBy.trim();
+        const norm = sel.select.toLowerCase().replace(/\s+/g,'');
+        if (norm !== g.toLowerCase()+',count(*)' && norm !== 'count(*),'+g.toLowerCase()) {
           throw new Error('GROUP BY wird aktuell mit SELECT spalte, COUNT(*) unterstützt.');
         }
-        const grouped = {};
-        rows.forEach(row => {
-          const key = row[groupColumn];
-          grouped[key] = (grouped[key] || 0) + 1;
-        });
-        rows = Object.entries(grouped).map(([key, count]) => {
-          const obj = {};
-          obj[groupColumn] = key;
-          obj['COUNT(*)'] = count;
-          return obj;
-        });
-
-        if (parsed.having) {
-          const having = parseHaving(parsed.having);
-          rows = rows.filter(r => compareSimple(r['COUNT(*)'], having.value, having.op));
+        const counts = {};
+        rows.forEach(r => counts[r[g]] = (counts[r[g]] || 0) + 1);
+        rows = Object.entries(counts).map(([k,c]) => { const o={}; o[g]=Number.isNaN(Number(k))?k:Number(k); o['COUNT(*)']=c; return o; });
+        if (p.having) {
+          const hm = p.having.match(/^count\(\*\)\s*(=|>|<)\s*(\d+)$/i);
+          if (!hm) throw new Error('HAVING wird aktuell nur mit COUNT(*) unterstützt.');
+          rows = rows.filter(r => hm[1] === '=' ? r['COUNT(*)'] === Number(hm[2]) : hm[1] === '>' ? r['COUNT(*)'] > Number(hm[2]) : r['COUNT(*)'] < Number(hm[2]));
         }
-
         if (sel.distinct) rows = distinctRows(rows);
       } else {
-        rows = projectColumns(rows, sel.select, sel.distinct);
+        rows = projectRows(rows, sel.select, sel.distinct);
       }
 
-      if (parsed.orderBy) {
-        const parts = parsed.orderBy.split(/\s+/);
-        const column = parts[0];
-        const direction = (parts[1] || 'ASC').toUpperCase();
-        rows.sort((a, b) => {
-          const av = a[column];
-          const bv = b[column];
+      if (p.orderBy) {
+        const parts = p.orderBy.split(/\s+/);
+        const col = parts[0], dir = (parts[1] || 'ASC').toUpperCase();
+        rows.sort((a,b) => {
+          const av=a[col], bv=b[col];
           if (av === bv) return 0;
-          if (av === null) return 1;
-          if (bv === null) return -1;
-          if (av < bv) return direction === 'DESC' ? 1 : -1;
-          return direction === 'DESC' ? -1 : 1;
+          if (av === null || av === undefined) return 1;
+          if (bv === null || bv === undefined) return -1;
+          return av < bv ? (dir === 'DESC' ? 1 : -1) : (dir === 'DESC' ? -1 : 1);
         });
       }
-
-      if (parsed.limit) {
-        const offset = parsed.offset ? Number(parsed.offset) : 0;
-        rows = rows.slice(offset, offset + Number(parsed.limit));
-      }
-
+      if (p.limit) rows = rows.slice(p.offset ? Number(p.offset) : 0, (p.offset ? Number(p.offset) : 0) + Number(p.limit));
       return rows;
     }
 
     function normalizedRows(rows) {
-      return JSON.stringify(rows.map(row => {
-        const sorted = {};
-        Object.keys(row).sort().forEach(key => { sorted[key] = row[key]; });
-        return sorted;
-      }));
+      return JSON.stringify(rows.map(r => Object.values(r)));
     }
 
     function renderTable(container, rows) {
       if (!rows || rows.length === 0) {
-        container.innerHTML = '<p class="subtle">Keine Zeilen.</p>';
+        container.innerHTML = '<p class="muted">Keine Zeilen.</p>';
         return;
       }
-      const columns = Object.keys(rows[0]);
-      let html = '<div class="data-table-wrap"><table><thead><tr>';
-      html += columns.map(col => '<th>' + escapeHtml(col) + '</th>').join('');
-      html += '</tr></thead><tbody>';
-      html += rows.map(row => '<tr>' + columns.map(col => '<td>' + escapeHtml(row[col] === null ? '' : String(row[col])) + '</td>').join('') + '</tr>').join('');
+      const cols = Object.keys(rows[0]);
+      let html = '<div class="table-wrap"><table><thead><tr>' + cols.map(c => '<th>'+escapeHtml(c)+'</th>').join('') + '</tr></thead><tbody>';
+      html += rows.map(r => '<tr>' + cols.map(c => '<td>'+escapeHtml(r[c] === null || r[c] === undefined ? '' : String(r[c]))+'</td>').join('') + '</tr>').join('');
       html += '</tbody></table></div>';
       container.innerHTML = html;
     }
 
     function renderSchemaBlocks() {
-      schemaView.innerHTML = '';
-      Object.entries(schemas).forEach(([tableName, rows]) => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'table-block';
-        wrapper.innerHTML = '<div class="table-block-header">' + escapeHtml(tableName) + '</div>';
-        const tableWrap = document.createElement('div');
-        tableWrap.className = 'data-table-wrap';
-        let html = '<table><thead><tr><th>Spalte</th><th>Typ</th><th>Bedeutung</th></tr></thead><tbody>';
-        html += rows.map(row => '<tr><td>' + escapeHtml(row.spalte) + '</td><td>' + escapeHtml(row.typ) + '</td><td>' + escapeHtml(row.bedeutung) + '</td></tr>').join('');
-        html += '</tbody></table>';
-        tableWrap.innerHTML = html;
-        wrapper.appendChild(tableWrap);
-        schemaView.appendChild(wrapper);
+      const target = document.getElementById('schemaView');
+      target.innerHTML = '';
+      Object.entries(schemas).forEach(([name, rows]) => {
+        const block = document.createElement('div');
+        block.className = 'table-block';
+        let h = '<div class="table-block-title">'+escapeHtml(name)+'</div><div class="table-wrap"><table><thead><tr><th>Spalte</th><th>Typ</th><th>Bedeutung</th></tr></thead><tbody>';
+        h += rows.map(r => '<tr><td>'+escapeHtml(r.spalte)+'</td><td>'+escapeHtml(r.typ)+'</td><td>'+escapeHtml(r.bedeutung)+'</td></tr>').join('');
+        h += '</tbody></table></div>';
+        block.innerHTML = h;
+        target.appendChild(block);
       });
     }
 
     function renderSeedBlocks() {
-      seedView.innerHTML = '';
-      Object.entries(data).forEach(([tableName, rows]) => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'table-block';
-        wrapper.innerHTML = '<div class="table-block-header">' + escapeHtml(tableName) + '</div>';
+      const target = document.getElementById('seedView');
+      target.innerHTML = '';
+      Object.entries(data).forEach(([name, rows]) => {
+        const block = document.createElement('div');
+        block.className = 'table-block';
+        block.innerHTML = '<div class="table-block-title">'+escapeHtml(name)+'</div>';
         const body = document.createElement('div');
         renderTable(body, rows);
-        wrapper.appendChild(body.firstChild);
-        seedView.appendChild(wrapper);
+        block.appendChild(body.firstChild);
+        target.appendChild(block);
       });
     }
 
     function updateStats() {
-      const solvedCount = Object.values(state.solved).filter(Boolean).length;
-      progressText.textContent = solvedCount + ' / ' + lessons.length + ' erledigt';
+      const solved = Object.values(state.solved).filter(Boolean).length;
+      progressText.textContent = solved + ' / ' + lessons.length + ' erledigt';
       scoreText.textContent = (state.score || 0) + ' Punkte';
-      progressFill.style.width = ((solvedCount / lessons.length) * 100) + '%';
+      progressFill.style.width = ((solved / lessons.length) * 100) + '%';
       currentLessonStat.textContent = String(currentLessonIndex + 1);
-      solvedStat.textContent = String(solvedCount);
+      solvedStat.textContent = String(solved);
       attemptStat.textContent = String(state.attempts || 0);
       hintStat.textContent = String(state.hintsUsed || 0);
     }
 
     function buildLessonList() {
+      lessonSelect.innerHTML = '';
       lessonList.innerHTML = '';
       lessons.forEach((lesson, index) => {
-        const button = document.createElement('button');
-        button.className = 'lesson-btn';
-        if (state.solved[index]) button.classList.add('done');
-        button.innerHTML = '<strong>' + escapeHtml(lesson.title) + '</strong><small>' + escapeHtml(lesson.task) + '</small>';
-        button.addEventListener('click', () => loadLesson(index));
-        lessonList.appendChild(button);
+        const opt = document.createElement('option');
+        opt.value = index;
+        opt.textContent = (state.solved[index] ? '✓ ' : '') + lesson.title;
+        lessonSelect.appendChild(opt);
+
+        const btn = document.createElement('button');
+        btn.className = 'lesson-btn';
+        if (state.solved[index]) btn.classList.add('done');
+        btn.innerHTML = '<strong>'+escapeHtml(lesson.title)+'</strong><small>'+escapeHtml(lesson.task)+'</small>';
+        btn.addEventListener('click', () => {
+          loadLesson(index);
+          lessonList.classList.remove('open');
+          toggleLessonsBtn.textContent = 'Liste';
+        });
+        lessonList.appendChild(btn);
       });
+      lessonSelect.value = currentLessonIndex;
     }
 
     function loadLesson(index) {
@@ -923,54 +775,46 @@ CREATE TABLE kunden (id INT, name VARCHAR(100));"></textarea>
       lessonTitle.textContent = lesson.title;
       lessonDescription.textContent = lesson.description;
       lessonTask.textContent = lesson.task;
-      hintList.innerHTML = '<li>Nutze den Hinweis-Button, um Tipps schrittweise einzublenden.</li>';
-      checkList.innerHTML = lesson.checks.map(item => '<li>' + escapeHtml(item) + '</li>').join('');
-      tagRow.innerHTML = lesson.tags.map(tag => '<span class="tag">' + escapeHtml(tag) + '</span>').join('');
-      renderSchemaBlocks();
-      renderSeedBlocks();
+      tagRow.innerHTML = lesson.tags.map(t => '<span class="tag">'+escapeHtml(t)+'</span>').join('');
       sqlEditor.value = '';
-      userResult.innerHTML = '<p class="subtle">Noch keine Ausgabe.</p>';
-      expectedResult.innerHTML = '<p class="subtle">Wird beim Prüfen oder per Button angezeigt.</p>';
-      setStatus('Bereit. Das Eingabefeld ist leer, damit du die SQL-Abfrage selbst schreibst.', 'info');
-      document.querySelectorAll('.lesson-btn').forEach((btn, btnIndex) => {
-        btn.classList.toggle('active', btnIndex === index);
-      });
+      userResult.innerHTML = '<p class="muted">Noch keine Ausgabe.</p>';
+      expectedResult.innerHTML = '<p class="muted">Wird beim Prüfen oder per Button angezeigt.</p>';
+      setStatus('Bereit. Schreibe deine SQL-Abfrage selbst.');
+      lessonSelect.value = index;
+      document.querySelectorAll('.lesson-btn').forEach((b,i)=>b.classList.toggle('active', i === index));
       updateStats();
       saveState();
     }
 
     function showExpected() {
-      const lesson = lessons[currentLessonIndex];
-      const expectedRows = executeQuery(lesson.solution);
-      renderTable(expectedResult, expectedRows);
+      renderTable(expectedResult, executeQuery(lessons[currentLessonIndex].solution));
     }
 
     document.getElementById('runBtn').addEventListener('click', () => {
       const lesson = lessons[currentLessonIndex];
       const sql = sqlEditor.value.trim();
       if (!sql) {
-        setStatus('❌ Das Eingabefeld ist leer. Schreibe zuerst selbst eine SQL-Abfrage.', 'err');
+        setStatus('❌ Das Eingabefeld ist leer.', 'err');
         return;
       }
       state.attempts = (state.attempts || 0) + 1;
       try {
-        const userRows = executeQuery(sql);
-        const expectedRows = executeQuery(lesson.solution);
-        renderTable(userResult, userRows);
-        renderTable(expectedResult, expectedRows);
-
-        if (normalizedRows(userRows) === normalizedRows(expectedRows)) {
+        const got = executeQuery(sql);
+        const exp = executeQuery(lesson.solution);
+        renderTable(userResult, got);
+        renderTable(expectedResult, exp);
+        if (normalizedRows(got) === normalizedRows(exp)) {
           if (!state.solved[currentLessonIndex]) {
             state.solved[currentLessonIndex] = true;
             state.score = (state.score || 0) + 10;
           }
-          setStatus('✅ Richtig. Deine Ausgabe stimmt mit dem erwarteten Ergebnis überein.', 'ok');
+          setStatus('✅ Richtig.', 'ok');
         } else {
-          setStatus('❌ Die Abfrage ist gültig, aber das Ergebnis passt noch nicht. Vergleiche dein Ergebnis mit dem Soll-Ergebnis.', 'err');
+          setStatus('❌ Ergebnis passt noch nicht. Aliase sind erlaubt — wichtig sind Werte und Reihenfolge.', 'err');
         }
-      } catch (error) {
-        userResult.innerHTML = '<p class="subtle">Kein Ergebnis wegen Fehler.</p>';
-        setStatus('❌ Fehler: ' + escapeHtml(error.message), 'err');
+      } catch (e) {
+        userResult.innerHTML = '<p class="muted">Kein Ergebnis wegen Fehler.</p>';
+        setStatus('❌ Fehler: ' + escapeHtml(e.message), 'err');
       }
       buildLessonList();
       updateStats();
@@ -980,50 +824,61 @@ CREATE TABLE kunden (id INT, name VARCHAR(100));"></textarea>
     document.getElementById('hintBtn').addEventListener('click', () => {
       const lesson = lessons[currentLessonIndex];
       if (currentHintIndex >= lesson.hints.length) {
-        setStatus('Alle Hinweise dieser Lektion wurden bereits angezeigt.', 'info');
+        setStatus('Alle Hinweise wurden angezeigt.');
         return;
       }
+      const hint = lesson.hints[currentHintIndex++];
       state.hintsUsed = (state.hintsUsed || 0) + 1;
-      const visibleHints = lesson.hints.slice(0, currentHintIndex + 1);
-      hintList.innerHTML = visibleHints.map(item => '<li>' + escapeHtml(item) + '</li>').join('');
-      currentHintIndex += 1;
-      setStatus('Hinweis eingeblendet. Versuche jetzt die Abfrage weiter selbst zu lösen.', 'info');
+      setStatus('💡 Hinweis: ' + escapeHtml(hint));
       updateStats();
       saveState();
     });
 
     document.getElementById('expectedBtn').addEventListener('click', () => {
       showExpected();
-      setStatus('Das erwartete Ergebnis wurde angezeigt.', 'info');
+      setStatus('Erwartetes Ergebnis angezeigt.');
     });
 
     document.getElementById('solutionBtn').addEventListener('click', () => {
       sqlEditor.value = lessons[currentLessonIndex].solution;
-      setStatus('Die Musterlösung wurde in den Editor eingefügt.', 'info');
+      setStatus('Musterlösung wurde eingefügt.');
     });
 
     document.getElementById('clearBtn').addEventListener('click', () => {
       sqlEditor.value = '';
-      setStatus('Editor geleert. Schreibe deine Lösung jetzt selbst.', 'info');
+      setStatus('Editor geleert.');
     });
 
-    document.getElementById('prevBtn').addEventListener('click', () => {
-      currentLessonIndex = (currentLessonIndex - 1 + lessons.length) % lessons.length;
-      loadLesson(currentLessonIndex);
-    });
-
-    document.getElementById('nextBtn').addEventListener('click', () => {
-      currentLessonIndex = (currentLessonIndex + 1) % lessons.length;
-      loadLesson(currentLessonIndex);
-    });
-
+    document.getElementById('prevBtn').addEventListener('click', () => loadLesson((currentLessonIndex - 1 + lessons.length) % lessons.length));
+    document.getElementById('nextBtn').addEventListener('click', () => loadLesson((currentLessonIndex + 1) % lessons.length));
     document.getElementById('resetBtn').addEventListener('click', () => {
       localStorage.removeItem(progressKey);
       state = { solved: {}, attempts: 0, hintsUsed: 0, score: 0, currentLessonIndex: 0 };
       buildLessonList();
       loadLesson(0);
-      setStatus('Fortschritt wurde gelöscht.', 'info');
+      setStatus('Fortschritt gelöscht.');
     });
+
+    lessonSelect.addEventListener('change', () => loadLesson(Number(lessonSelect.value)));
+    toggleLessonsBtn.addEventListener('click', () => {
+      const open = lessonList.classList.toggle('open');
+      toggleLessonsBtn.textContent = open ? 'Liste ausblenden' : 'Liste';
+    });
+
+    const modal = document.getElementById('tablesModal');
+    document.getElementById('openTablesBtn').addEventListener('click', () => {
+      renderSchemaBlocks();
+      renderSeedBlocks();
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+    });
+    document.getElementById('closeTablesBtn').addEventListener('click', closeModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    function closeModal() {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+    }
 
     buildLessonList();
     loadLesson(currentLessonIndex);
